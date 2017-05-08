@@ -1,33 +1,40 @@
 # --*-- coding:utf-8 --*--
 
+import time
+from logbook import Logger
+
+log = Logger('send')
+
 from ziyan.utils.database_wrapper import RedisWrapper, InfluxdbWrapper
 
 
 class Send:
-    def __init__(self, conf):
+    def __init__(self, conf, redis_address):
         self.influxdb = InfluxdbWrapper(conf['influxdb'])
+        self.redis = RedisWrapper(redis_address)
         self.data_original = None
         pass
 
-    def que_data(self):
-        """take data from redis"""
-        self.data_original = data_original
-         return
-
-    def unpack(self):
-        data= self.data_original
-
-        return data, time_unit
+    def _unpack(self):
+        pass
 
     def send(self):
         """
-        send data to influxdb
-        :return: 
+        1.unpack redis data
+        2.send data to influxdb
+        :return: None
         """
-        data_handle = self.unpack()
-        self.influxdb.send(data_handle,time_unit)
+        data_handle, time_precision  = self._unpack()
+        self.influxdb.send(data_handle, time_precision)
+        return None
 
     def reque_data(self):
+        """
+        return  data to redis
+        :return: 
+        """
+        self.redis.queue_back('data_queue', self.data_original)
+        return None
 
 
     def run(self):
@@ -38,8 +45,8 @@ class Send:
         :return:
         """
         try:
-            pass
-        except as:
-
-
+            self.send()
+        except Exception as e:
+            log.error(e)
             self.reque_data()
+            time.sleep(3)
