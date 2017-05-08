@@ -14,6 +14,7 @@ username ="eimuserw"
 password = "max2016s0luto9"
 db = "patac_eim"
 
+
 [log_configuration]
     console = true
     console_level = 'DEBUG'   #'DEBUG','INFO','NOTICE','WARNING','ERROR','CRITICAL'
