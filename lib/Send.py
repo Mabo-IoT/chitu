@@ -9,6 +9,7 @@ from ziyan.utils.database_wrapper import RedisWrapper, InfluxdbWrapper
 
 log = Logger('Send')
 
+
 class Send:
     def __init__(self, conf, redis_address):
         self.redis = RedisWrapper(redis_address)
@@ -40,7 +41,7 @@ class Send:
                     'tags': tags,
                     'time': timestamp,
                     'fields': fields
-                 }
+                }
             ]
             return josn_data, unit
         else:
@@ -97,7 +98,7 @@ class Send:
         2.send data to influxdb
         :return: None
         """
-        data_handle, time_precision  = self.__unpack()
+        data_handle, time_precision = self.__unpack()
         if data_handle:
             info = self.influxdb.send(data_handle, time_precision)
             log.info('send data to inflxudb.{}, {}'.format(data_handle[0]['measurement'], info))
@@ -109,8 +110,7 @@ class Send:
         """
         self.redis.queue_back('data_queue', self.data_original)
 
-
-    def run(self):
+    def run(self, **kwargs):
         """
         1.unpack data
         2.send data:
@@ -123,7 +123,7 @@ class Send:
 
             except Exception as e:
                 log.error(e)
-
-                #can't connect to influxdb then repush data to redis
+                # can't connect to influxdb then repush data to redis
                 self.reque_data()
                 time.sleep(3)
+            kwargs['record'].thread_signal[kwargs['name']] = time.time()
