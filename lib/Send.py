@@ -34,6 +34,9 @@ class Send:
             timestamp = data['time']
             unit = data['unit']
 
+            if data['heartbeat']:
+                tags['Heartbeat'] = 'yes'
+
             # influxdb data structure
             josn_data = [
                 {
