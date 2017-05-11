@@ -1,0 +1,27 @@
+[redis]
+    [[redis.address]]
+    # local ip or remote ip ?
+    host = "127.0.0.1"
+    # which port is your redis server host?
+    port = 6379
+    # which db your data reside in ?
+    db = 1
+
+[influxdb]
+host = "10.203.96.26"
+port = 8086
+username ="eimuserw"
+password = "max2016s0luto9"
+db = "patac_eim"
+
+
+[log_configuration]
+    console = true
+    console_level = 'DEBUG'   #'DEBUG','INFO','NOTICE','WARNING','ERROR','CRITICAL'
+    file = true
+    file_level = 'NOTICE'  #'DEBUG','INFO','NOTICE','WARNING','ERROR','CRITICAL'
+    log_file = 'logs/log.log'
+    backup_count = 5
+    max_size = 1024
+    format_string ='({record.time:%Y-%m-%d %H:%M:%S}),{record.level_name},[{record.thread_name}],{record.channel}[{record.lineno}]: {record.message}'
+    #simple version: format_string = '({record.time:%m-%d %H:%M:%S}){record.level_name},channel:{record.channel},line_{record.lineno}: {record.message}'
