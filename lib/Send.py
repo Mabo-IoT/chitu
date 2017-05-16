@@ -2,7 +2,7 @@
 
 
 import time
-
+import sys
 import msgpack
 from logbook import Logger
 from ziyan.utils.database_wrapper import RedisWrapper, InfluxdbWrapper
@@ -25,7 +25,12 @@ class Send:
             # unpack data
             data = msgpack.unpackb(self.data_original)
             data = self.msg_unpack(data)
-            data = self.byte_unpack(data)
+            
+            # python2.7.12 string doesn't need decode
+            if sys.version_info[0] == 2 and sys.version_info[2] == 12:
+                pass
+            else:
+                data = self.byte_unpack(data)
 
             # get influxdb send data
             measurement = data['measurement']
