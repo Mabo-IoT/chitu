@@ -54,6 +54,7 @@ class Send:
             return josn_data, unit
         else:
             log.info('redis have no data')
+            time.sleep(5)
             return None, None
 
     def msg_unpack(self, bytes_dict):
