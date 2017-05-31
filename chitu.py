@@ -73,7 +73,7 @@ def watchdog(*args):
                 worker.start()
                 threads_set[thread.name] = worker
 
-            args[2].thread_set = threads_set
+            args[2].thread_set.update(threads_set)
 
         time.sleep(10)
 
@@ -102,6 +102,8 @@ class Maintainer:
             if time.time() - singal > 1200:
                 try:
                     self._async_raise(self.thread_set[threadname].ident, SystemExit)
+                    log.warning("\n%s is timeout, kill it" % threadname)
+                    self.thread_signal[threadname] = time.time()
                 except Exception as e:
                     log.error('\nThere is something wrong')
 
