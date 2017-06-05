@@ -110,7 +110,10 @@ class Send:
         data_handle, time_precision = self.__unpack()
         if data_handle:
             info = self.influxdb.send(data_handle, time_precision)
-            log.info('send data to inflxudb.{}, {}'.format(data_handle[0]['measurement'], info))
+            if info:
+                log.info('send data to inflxudb.{}, {}'.format(data_handle[0]['measurement'], info))
+            else:
+                raise Exception("\n Can't connect influxdb")
 
     def reque_data(self):
         """
