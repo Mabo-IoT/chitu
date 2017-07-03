@@ -1,8 +1,9 @@
 # --*-- coding:utf-8 --*--
 
 
-import time
 import sys
+import time
+
 import msgpack
 from logbook import Logger
 from ziyan.utils.database_wrapper import RedisWrapper, InfluxdbWrapper
@@ -16,6 +17,9 @@ class Send:
         self.influxdb = InfluxdbWrapper(conf['influxdb'])
         self.data_original = None
 
+        # sending error counts for wicked data
+        self.send_error_counts = 0
+
     def __unpack(self):
         data_len = self.redis.get_len('data_queue')
         if data_len > 0:
@@ -25,7 +29,7 @@ class Send:
             # unpack data
             data = msgpack.unpackb(self.data_original)
             data = self.msg_unpack(data)
-            
+
             # python2.7.12 string doesn't need decode
             if sys.version_info[0] == 2 and sys.version_info[2] == 12:
                 pass
@@ -107,7 +111,12 @@ class Send:
         2.send data to influxdb
         :return: None
         """
-        data_handle, time_precision = self.__unpack()
+        try:
+            data_handle, time_precision = self.__unpack()
+        except:
+            self.send_error_counts += 1
+            log.error('this must be a wicked evil data.')
+            raise Exception('\n Wicked data!')
         if data_handle:
             info = self.influxdb.send(data_handle, time_precision)
             if info:
@@ -135,7 +144,16 @@ class Send:
 
             except Exception as e:
                 log.error(e)
-                # can't connect to influxdb then repush data to redis
-                self.reque_data()
+
+                # if unpack error counts more than 20 times, drop it.
+                if self.send_error_counts > 20:
+
+                    self.send_error_counts = 0
+                    log.info('drop this evil data.')
+
+                # send data error, then requeue it.
+                else:
+                    self.reque_data()
+
                 time.sleep(3)
             kwargs['record'].thread_signal[kwargs['name']] = time.time()
