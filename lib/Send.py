@@ -27,7 +27,7 @@ class Send:
             data = self.msg_unpack(data)
             
             # python2.7.12 string doesn't need decode
-            if sys.version_info[0] == 2 and sys.version_info[2] == 12:
+            if sys.version_info[0] == 2 and sys.version_info[2] <= 12:
                 pass
             else:
                 data = self.byte_unpack(data)
