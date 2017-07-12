@@ -24,13 +24,7 @@ class Send:
 
             # unpack data
             data = msgpack.unpackb(self.data_original)
-            data = self.msg_unpack(data)
-            
-            # python2.7.12 string doesn't need decode
-            if sys.version_info[0] == 2 and sys.version_info[2] == 12:
-                pass
-            else:
-                data = self.byte_unpack(data)
+            data = msgpack.unpackb(self.data_original, encoding='utf-8')
 
             # get influxdb send data
             measurement = data['measurement']
@@ -57,49 +51,6 @@ class Send:
             time.sleep(5)
             return None, None
 
-    def msg_unpack(self, bytes_dict):
-        """
-        lua to python3, lua's table will be transefer to python dict, but the key
-        and the value of dict is byte string, and bytes string can't be directly
-        used in send function from influxdb package.
-        :param bytes_dict: a dict whcih key and value is byte string.
-        :return: a user-friendly normal dict.
-        """
-        a = {}
-        if not isinstance(bytes_dict, dict):
-            return bytes_dict
-        for key, value in bytes_dict.items():
-            value = self.msg_unpack(value)
-            if isinstance(key, bytes):
-                key = key.decode()
-            if isinstance(value, bytes):
-                try:
-                    value = value.decode()
-                except:
-                    value = msgpack.unpackb(value)
-            a[key] = value
-
-        return a
-
-    def byte_unpack(self, bytes_dict):
-        """
-        lua to python3, lua's table will be transefer to python dict, but the key
-        and the value of dict is byte string, and bytes string can't be directly
-        used in send function from influxdb package.
-        :param bytes_dict: a dict whcih key and value is byte string.
-        :return: a user-friendly normal dict.
-        """
-        a = {}
-        if not isinstance(bytes_dict, dict):
-            return bytes_dict
-        for key, value in bytes_dict.items():
-            value = self.byte_unpack(value)
-            if isinstance(key, bytes):
-                key = key.decode()
-            if isinstance(value, bytes):
-                value = value.decode()
-            a[key] = value
-        return a
 
     def send(self):
         """
