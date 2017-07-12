@@ -26,8 +26,7 @@ class Send:
             self.data_original = self.redis.dequeue('data_queue')
 
             # unpack data
-
-
+            data = msgpack.unpackb(self.data_original)
             data = msgpack.unpackb(self.data_original, encoding='utf-8')
 
             # get influxdb send data
