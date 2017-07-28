@@ -2,7 +2,7 @@
 
 
 import time
-
+import sys
 import msgpack
 from logbook import Logger
 from ziyan.utils.database_wrapper import RedisWrapper, InfluxdbWrapper
@@ -26,8 +26,14 @@ class Send:
             self.data_original = self.redis.dequeue('data_queue')
 
             # unpack data
-            data = msgpack.unpackb(self.data_original)
-            data = msgpack.unpackb(self.data_original, encoding='utf-8')
+            data_raw = msgpack.unpackb(self.data_original)
+
+            # data = self.msg_unpack(data)
+            data = dict()
+            for k,v in data_raw.items():
+                if v == True:
+                    continue
+                data[k.decode('utf-8')] = msgpack.unpackb(v, encoding='utf-8')
 
             # get influxdb send data
             measurement = data['measurement']
@@ -38,7 +44,7 @@ class Send:
 
             if data.get('heartbeat'):
                 tags['Heartbeat'] = 'yes'
-
+            
             # influxdb data structure
             josn_data = [
                 {
@@ -48,6 +54,7 @@ class Send:
                     'fields': fields
                 }
             ]
+
             return josn_data, unit
         else:
             log.info('redis have no data')
@@ -62,7 +69,8 @@ class Send:
         """
         try:
             data_handle, time_precision = self.__unpack()
-        except:
+        except Exception as e:
+            log.error(e)
             self.send_error_counts += 1
             log.error('this must be a wicked evil data.')
             raise Exception('\n Wicked data!')
