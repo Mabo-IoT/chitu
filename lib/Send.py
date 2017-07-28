@@ -26,15 +26,15 @@ class Send:
             self.data_original = self.redis.dequeue('data_queue')
 
             # unpack data
-            data = msgpack.unpackb(self.data_original)
+            data_raw = msgpack.unpackb(self.data_original)
 
-            data = self.msg_unpack(data)
-            
-            if sys.version_info[0] == 2 and sys.version_info[2] <= 12:
-                pass
-            else:
-                data = self.byte_unpack(data)
-            
+            # data = self.msg_unpack(data)
+            data = dict()
+            for k,v in data_raw.items():
+                if v == True:
+                    continue
+                data[k.decode('utf-8')] = msgpack.unpackb(v, encoding='utf-8')
+
             # get influxdb send data
             measurement = data['measurement']
             tags = data['tags']
@@ -60,50 +60,6 @@ class Send:
             log.info('redis have no data')
             time.sleep(5)
             return None, None
-            
-    def msg_unpack(self, bytes_dict):
-        """
-        lua to python3, lua's table will be transefer to python dict, but the key
-        and the value of dict is byte string, and bytes string can't be directly
-        used in send function from influxdb package.
-        :param bytes_dict: a dict whcih key and value is byte string.
-        :return: a user-friendly normal dict.
-        """
-        a = {}
-        if not isinstance(bytes_dict, dict):
-            return bytes_dict
-        for key, value in bytes_dict.items():
-            value = self.msg_unpack(value)
-            if isinstance(key, bytes):
-                key = key.decode("utf-8")
-            if isinstance(value, bytes):
-                try:
-                    value = value.decode("utf-8")
-                except:
-                    value = msgpack.unpackb(value)
-            a[key] = value
-
-        return a
-
-    def byte_unpack(self, bytes_dict):
-        """
-        lua to python3, lua's table will be transefer to python dict, but the key
-        and the value of dict is byte string, and bytes string can't be directly
-        used in send function from influxdb package.
-        :param bytes_dict: a dict whcih key and value is byte string.
-        :return: a user-friendly normal dict.
-        """
-        a = {}
-        if not isinstance(bytes_dict, dict):
-            return bytes_dict
-        for key, value in bytes_dict.items():
-            value = self.byte_unpack(value)
-            if isinstance(key, bytes):
-                key = key.decode("utf-8")
-            if isinstance(value, bytes):
-                value = value.decode("utf-8")
-            a[key] = value
-        return a
 
     def send(self):
         """
